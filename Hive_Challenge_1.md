@@ -1,3 +1,93 @@
+# Scenario based ques:
+
+# 1. Will the reducer work or not if you use “Limit 1” in any HiveQL query?
+# Ans.	
+    Condition 1: No (If it is used only with select command as there is no aggregation, join, group by operation being performed).
+	Condition 2: Yes (If it is used with aggregation, group by ,order by operations)
+
+# 2. Suppose I have installed Apache Hive on top of my Hadoop cluster using default metastore configuration. Then, what will happen if we have multiple clients trying to access Hive at the same time? 
+# Ans.	
+    As hive maintains its metadata in Derby database, and its limitation is that more than 1 connection cannot happen at a time. so multiple clients cannot connect. 
+
+# 3. Suppose, I create a table that contains details of all the transactions done by the customers: CREATE TABLE transaction_details (cust_id INT, amount FLOAT, month   STRING, country STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ‘,’ ;
+# Now, after inserting 50,000 records in this table, I want to know the total revenue generated for each month. But, Hive is taking too much time in processing this    query. How will you solve this problem and list the steps that I will be taking in order to do so?
+# Ans. 	
+    First, we have to use ORC table to store the data as it is in columnar format(optimized row-columnar ) which is a good fit for distributed systems.
+	Second, we use partitioning which is an optimization technique. For querying the data based on months, we can create partitions dynamically with respect to month.
+	
+	Steps:
+	Create a partitioned table:
+	CREATE TABLE partitioned_transaction (cust_id INT, amount FLOAT, country STRING) PARTITIONED BY (month STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ‘,’ ; 
+	SET hive.exec.dynamic.partition = true;
+	SET hive.exec.dynamic.partition.mode = nonstrict;
+	INSERT OVERWRITE TABLE partitioned_transaction PARTITION (month) SELECT cust_id, amount, country, month FROM transaction_details;	
+
+
+
+# 4. How can you add a new partition for the month December in the above partitioned table?
+# Ans.	
+    ALTER TABLE partitioned_transaction ADD PARTITION (month=’Dec’) LOCATION  ‘/partitioned_transaction’;
+
+# 5. I am inserting data into a table based on partitions dynamically. But, I received an error – FAILED ERROR IN SEMANTIC ANALYSIS: Dynamic partition strict mode requires at least one static partition column. How will you remove this error?
+# Ans.	
+    set this property for dynamic partioning:
+	SET hive.exec.dynamic.partition = true;
+	set hive.exec.dynamic.partition.mode=nonstrict; 
+
+# 6. Suppose, I have a CSV file – ‘sample.csv’ present in ‘/temp’ directory with the following entries:
+   # id first_name last_name email gender ip_address
+   # How will you consume this CSV file into the Hive warehouse using built-in SerDe?
+# Ans.	
+     SerDe stands for serializer/deserializer. A SerDe allows us to convert the unstructured bytes into a record that we can process using Hive. SerDes are implemented      using Java. Hive comes with several built-in SerDes and many other third-party SerDes are also available. 
+	 Hive provides a specific SerDe for working with CSV files. We can use this SerDe for the sample.csv by issuing following commands:
+
+	CREATE EXTERNAL TABLE sample
+	(id int, first_name string, 
+	last_name string, email string,
+	gender string, ip_address string) 
+	ROW FORMAT SERDE ‘org.apache.hadoop.hive.serde2.OpenCSVSerde’ 
+		
+
+
+# 7. LOAD DATA LOCAL INPATH ‘Home/country/state/’
+   # OVERWRITE INTO TABLE address;
+   # The following statement failed to execute. What can be the cause?
+# Ans. 	
+    path is not correct.
+	correct command: LOAD DATA LOCAL INPATH ‘file:///Home/country/state/’ OVERWRITE INTO TABLE address;
+
+# 8. Is it possible to add 100 nodes when we already have 100 nodes in Hive? If yes, how?
+# Ans.	
+    Yes we can add 100 nodes.
+	Steps:
+		a. Setup a new system with username and password.
+		b. Setup SSH connections.
+		c. Add new data node hostname, IP address and other details.
+
+# 9. Suppose, I have a lot of small CSV files present in the input directory in HDFS and I want to create a single Hive table corresponding to these files. The data in these files are in the format: {id, name, e-mail, country}. Now, as we know, Hadoop performance degrades when we use lots of small files.
+  # So, how will you solve this problem where we want to create a single Hive table for lots of small files without degrading the performance of the system?
+
+# Ans.	
+    We can use the SequenceFile format which will group these small files together to form a single sequence file. The steps that will be followed in doing so are as       follows:
+
+	Create a temporary table:
+	CREATE TABLE temp_table (id INT, name STRING, e-mail STRING, country STRING)
+	ROW FORMAT FIELDS DELIMITED TERMINATED BY ‘,’ STORED AS TEXTFILE;
+
+	Load the data into temp_table:
+	LOAD DATA INPATH ‘/input’ INTO TABLE temp_table;
+
+	Create a table that will store data in SequenceFile format:
+	CREATE TABLE sample_seqfile (id INT, name STRING, e-mail STRING, country STRING)
+
+	ROW FORMAT FIELDS DELIMITED TERMINATED BY ‘,’ STORED AS SEQUENCEFILE;
+
+	Transfer the data from the temporary table into the sample_seqfile table:
+	INSERT OVERWRITE TABLE sample SELECT * FROM temp_table;
+
+	Hence, a single SequenceFile is generated which contains the data present in all of the input files and therefore, the problem of having lots of small files is finally eliminated.
+    
+# Queries:
 ### 1. Create a hive table as per given schema in your dataset 
 ### Answer-> 
 > create table air_quality_csv
