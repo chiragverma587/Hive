@@ -230,7 +230,7 @@ Ineuron Intelligence    1
 Nitin M 1
 Tarun   1
 
-# from agent perfrormance
+## from agent perfrormance
 
 hive> select agent,count(distinct(dat)) as no_of_days from agent_performance group by agent order by no_of_days desc;
 Query ID = cloudera_20220921133434_ad82e223-0f4e-4b70-abaf-9e30fe955ba0
