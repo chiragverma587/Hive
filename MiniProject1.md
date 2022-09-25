@@ -1,24 +1,24 @@
-## agent login report schema and data load
+## 1. agent login report schema and data load
 
 hive> create table agent_login_report(slid int,agent string, dat string, login string, logout string, duration string) row format delimited fields terminated by ',' stored as textfile TBLPROPERTIES ("skip.header.line.count"="1");
 
 hive> load data local inpath 'file:///home/cloudera/hive-project1/AgentLogingReport.csv' into table agent_login_report;
 
-## agent perfromance schema and data load
+## 2. agent perfromance schema and data load
 
 hive> create table agent_performance(slid int,dat string,agent string, tot_chat int, avg_rsp_time string, avg_resol_time string, avg_rating double,tot_feedback int) row format delimited fields terminated by ',' stored as textfile TBLPROPERTIES ("skip.header.line.count"="1");
 
 hive> load data local inpath 'file:///home/cloudera/hive-project1/AgentPerformance.csv' into table agent_performance;
 
 
-## List of all agents' names. 
+## 3. List of all agents' names. 
 
 hive> select agent from agent_performance;
 
 hive> select agent from agent_login_report;
 
 
-## Find out agent average rating.
+## 4.Find out agent average rating.
 
 hive> select agent, round(avg(avg_rating),2) as avg_rating from agent_performance group by agent order by avg_rating desc;
 
@@ -134,7 +134,7 @@ Aditya  0.0
 Abhishek        0.0
 Time taken: 69.985 seconds, Fetched: 70 row(s)
   
-## Total working days for each agents
+## 5. Total working days for each agents
 
 ## from agent login report
 
@@ -345,7 +345,7 @@ Aditya  30
 Abhishek        30
 
 
-## Total query that each agent have taken 
+## 6. Total query that each agent have taken 
 
 hive> select agent,sum(tot_chat) as total_queries from agent_performance group by agent order by total_queries desc;
 Query ID = cloudera_20220920135353_ccae015b-6016-41cf-8775-ee29330aeb11
@@ -459,7 +459,7 @@ Amersh  0
 Aditya  0
 Abhishek        0
 
-## Total Feedback that each agent have received 
+## 7. Total Feedback that each agent have received 
 
 hive> select agent,sum(tot_feedback) as total_feedback from agent_performance group by agent order by total_feedback desc;
 Query ID = cloudera_20220920135858_f4c98947-3b76-40b4-b344-b5da91d8340a
@@ -573,7 +573,7 @@ Amersh  0
 Aditya  0
 Abhishek        0
 
-## Agent name who have average rating between 3.5 to 4 
+## 8. Agent name who have average rating between 3.5 to 4 
 
 hive> select agent,avg(avg_rating) as a_rating from agent_performance group by agent having a_rating between 3.5 and 4 ;
 Query ID = cloudera_20220920140707_20088cb3-452f-4fe8-97f7-8524c86ebed0
@@ -604,17 +604,17 @@ Ishawant Kumar  3.543333333333334
 Khushboo Priya  3.703666666666666
 Manjunatha A    3.5946666666666665
 
-## Agent name who have rating less than 3.5
+## 9. Agent name who have rating less than 3.5
 
 hive> select agent, avg_rating from agent_performance where avg_rating<3.5 order by avg_rating desc;
 Time taken: 35.805 seconds, Fetched: 1474 row(s)
  
-## Agent name who have rating more than 4.5
+## 10. Agent name who have rating more than 4.5
 
 hive> select agent, avg_rating from agent_performance where avg_rating<3.5 order by avg_rating desc;
 
 
-## How many feedback agents have received more than 4.5 average
+## 11. How many feedback agents have received more than 4.5 average
 
 hive> select agent, sum(tot_feedback) as fb from agent_performance where avg_rating >4.5 group by agent order by fb;
 Query ID = cloudera_20220921141010_60d39e87-8211-457f-b346-d60d12347757
@@ -705,7 +705,7 @@ Hrisikesh Neogi 183
 Saikumarreddy N 184
 Bharath         231
 
-## average weekly response time for each agent 
+## 12. average weekly response time for each agent 
 
 hive> with cte as (select weekofyear(cast(to_date(from_unixtime(unix_timestamp(dat,'MM/dd/yyyy'))) as date)) as wk,agent,unix_timestamp(avg_rsp_time,'hh:mm:ss')-28800 as result from agent_performance)
     > select agent,wk,avg(result),from_unixtime(cast(round(avg(result),0) as int),'mm:ss') as pp from cte group by agent,wk;
@@ -1084,7 +1084,7 @@ Zeeshan         29      62.857142857142854      01:03
 Zeeshan         30      63.833333333333336      01:04
 Time taken: 34.294 seconds, Fetched: 350 row(s)
 
-## average weekly resolution time for each agents 
+## 13. average weekly resolution time for each agents 
 
 hive> with cte as (select weekofyear(cast(to_date(from_unixtime(unix_timestamp(dat,'MM/dd/yyyy'))) as date)) as wk,agent,unix_timestamp(avg_resol_time,'hh:mm:ss')-28800 as result from agent_performance)
     > select agent,wk,avg(result),from_unixtime(cast(round(avg(result),0) as int)-14400,'mm:ss') as pp from cte group by agent,wk;
@@ -1463,7 +1463,7 @@ Zeeshan         29      794.2857142857143       13:14
 Zeeshan         30      773.5   12:54
 Time taken: 34.605 seconds, Fetched: 350 row(s)
 
-## Find the number of chat on which they have received a feedback 
+## 14. Find the number of chat on which they have received a feedback 
 >>  select  agent, sum(tot_feedback) as chat_with_feedback from agent_performance where tot_feedback<>0 group by agent;
 Query ID = cloudera_20220922093232_73d95cf7-6c52-43e0-ad89-89e43458b21c
 Total jobs = 1
@@ -1543,7 +1543,7 @@ Wasim   284
 Zeeshan         335
 Time taken: 60.536 seconds, Fetched: 53 row(s)
 
-## Total contribution hour for each and every agents weekly basis 
+## 15. Total contribution hour for each and every agents weekly basis 
 >>  with cte as (select weekofyear(cast(to_date(from_unixtime(unix_timestamp(dat,'dd-MMM-yy'))) as date)) as wk,agent,unix_timestamp(duration,'hh:mm:ss')-28800 as result from agent_login_report) select agent,wk, from_unixtime(cast(round(avg(result),0) as int)-14400,'hh:mm:ss') as avg_hrs from cte group by agent,wk;
 Query ID = cloudera_20220922105353_8f2d7b58-227b-45c1-b2a6-9d525ad577a2
 Total jobs = 1
@@ -1659,12 +1659,12 @@ Zeeshan 29      04:04:17
 Zeeshan 30      06:09:55
 Time taken: 54.299 seconds, Fetched: 89 row(s)
 
-## Perform inner join, left join and right join based on the agent column and after joining the table export that data into your local system.
+## 16. Perform inner join, left join and right join based on the agent column and after joining the table export that data into your local system.
 >> [cloudera@quickstart data]$ hive -e 'use hive_database_project1; select * from agent_login_report al left join agent_performance ap on al.agent = ap.agent' | sed 's/[\t]/,/g' > /home/cloudera/data/agent_leftjoin.csv
 >> [cloudera@quickstart data]$ hive -e 'use hive_database_project1; select * from agent_login_report al right join agent_performance ap on al.agent = ap.agent' | sed 's/[\t]/,/g' > /home/cloudera/data/agent_rightjoin.csv
 >> [cloudera@quickstart data]$ hive -e 'use hive_database_project1; select * from agent_login_report al join agent_performance ap on al.agent = ap.agent' | sed 's/[\t]/,/g' > /home/cloudera/data/agent_join.csv
 
-## Perform partitioning on top of the agent column and then on top of that perform bucketing for each partitioning.
+## 17. Perform partitioning on top of the agent column and then on top of that perform bucketing for each partitioning.
 (agent_login_report):
 Partitioning:
 >> create table agent_login_report_partition(slid int, dat string, login string, logout string, duration string) partitioned by (agent string);
