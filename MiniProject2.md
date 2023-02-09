@@ -54,9 +54,6 @@
               print(str(int(line[:2])+12),":",line[2:4])
 
       >> select transform(violtime) using "python time_udf.py" as (viotime string)from parking_csv_partition_year where parking_csv_partion_year.issue_year=2017
-      
-      *couldnt check the query as python is not working in the cloudera setup.
-### 6) Divide 24 hours into 6 equal discrete bins of time. The intervals you choose are at your discretion. For each of these groups, find the 3 most commonly occurring violations
-      >>  couldnt perform the query because python is not working in my cloudera setup. For the same i hv requested for the doubt clearance session.
+     
 
 
